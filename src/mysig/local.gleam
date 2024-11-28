@@ -55,7 +55,7 @@ fn expand_path(path) {
   |> result.replace_error(snag.new("invalid path goes outside root"))
 }
 
-pub fn serve(port, content) {
+pub fn handler(content) {
   use content <- t.do(
     t.each(content, fn(file) {
       let #(path, bytes) = file
@@ -79,7 +79,12 @@ pub fn serve(port, content) {
       t.Done(#(path, response))
     }),
   )
-  t.serve(port, do_serve(_, content))
+  t.done(do_serve(_, content))
+}
+
+pub fn serve(port, content) {
+  use handler <- t.do(handler(content))
+  t.serve(port, handler)
 }
 
 fn script(key) {
