@@ -31,10 +31,6 @@ import lustre/attribute as a
 import lustre/element/html as h
 import mysig/open_graph as og
 
-fn meta_title(title) {
-  h.meta([a.name("title"), a.content(title)])
-}
-
 fn meta_description(description) {
   h.meta([a.name("description"), a.content(description)])
 }
