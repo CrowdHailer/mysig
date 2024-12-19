@@ -2,14 +2,14 @@ import gleam/list
 import lustre/attribute as a
 import lustre/element/html as h
 
-pub fn doc(title, head, body) {
+pub fn doc(head, body) {
   h.html([a.attribute("lang", "en")], [
-    h.head([], list.append(common_head_tags(title), head)),
+    h.head([], list.append(common_head_tags(), head)),
     h.body([], body),
   ])
 }
 
-fn common_head_tags(title) {
+pub fn common_head_tags() {
   [
     h.meta([a.attribute("charset", "UTF-8")]),
     h.meta([
@@ -17,7 +17,6 @@ fn common_head_tags(title) {
       a.attribute("content", "IE=edge"),
     ]),
     h.meta([a.attribute("viewport", "width=device-width, initial-scale=1.0")]),
-    h.title([], title),
   ]
 }
 

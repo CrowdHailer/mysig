@@ -1,5 +1,4 @@
 import gleam/bit_array
-import gleam/list
 import lustre
 import lustre/attribute as a
 import lustre/element.{text}
@@ -20,7 +19,7 @@ pub fn page(bundle) {
 
   use mainjs <- t.do(asset.resource(asset.js("main", script), bundle))
 
-  html.doc("example", [mainjs], [h.div([a.id("app")], [])])
+  html.doc([mainjs], [h.div([a.id("app")], [])])
   |> element.to_document_string()
   |> bit_array.from_string
   |> t.done()
