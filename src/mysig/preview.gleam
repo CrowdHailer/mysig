@@ -49,7 +49,7 @@ fn canonical_link(canonical) {
 // og:description is optional but why not require it
 pub fn homepage(title title, description description, canonical canonical) {
   [
-    meta_title(title),
+    h.title([], title),
     og.title(title),
     meta_description(description),
     og.description(description),

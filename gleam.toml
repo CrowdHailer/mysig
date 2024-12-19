@@ -1,5 +1,5 @@
 name = "mysig"
-version = "0.2.0"
+version = "0.2.1"
 target = "javascript"
 
 description = "Tookit for building web (sites, apps or pages) with Gleam"
