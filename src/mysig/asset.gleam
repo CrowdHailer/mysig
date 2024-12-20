@@ -10,6 +10,9 @@ pub const tailwind_2_2_11 = "https://unpkg.com/tailwindcss@2.2.11/dist/tailwind.
 pub type MediaType {
   Js
   Css
+  Webp
+  Png
+  Jpeg
 }
 
 pub type Asset {
@@ -22,6 +25,18 @@ pub fn css(name, content) {
 
 pub fn js(name, content) {
   Asset(name, bit_array.from_string(content), Js)
+}
+
+pub fn webp(name, content) {
+  Asset(name, content, Webp)
+}
+
+pub fn png(name, content) {
+  Asset(name, content, Png)
+}
+
+pub fn jpeg(name, content) {
+  Asset(name, content, Jpeg)
 }
 
 pub type Bundle {
@@ -44,6 +59,9 @@ pub fn resource(asset, bundle) {
   let ext = case type_ {
     Js -> "js"
     Css -> "css"
+    Webp -> "webp"
+    Png -> "png"
+    Jpeg -> "jpeg"
   }
   let id = name <> "-" <> hash <> "." <> ext
 
@@ -58,6 +76,43 @@ pub fn resource(asset, bundle) {
         "",
       )
     Css -> h.link([a.rel("stylesheet"), a.href(path)])
+    _ -> panic as "not a resource"
+  }
+  |> t.done()
+}
+
+pub fn inline(asset, bundle) {
+  let Asset(name, bytes, type_) = asset
+  use hash <- t.do(t.hash(t.SHA256, bytes))
+  let hash = bit_array.base16_encode(hash)
+  let ext = case type_ {
+    Js -> "js"
+    Css -> "css"
+    Webp -> "webp"
+    Png -> "png"
+    Jpeg -> "jpeg"
+  }
+  let id = name <> "-" <> hash <> "." <> ext
+
+  let Bundle(root, store) = bundle
+  let path = root <> "/" <> id
+  ref.update(store, dict.insert(_, path, bytes))
+
+  case type_ {
+    Js -> panic as "not a inline"
+    Css -> h.link([a.rel("stylesheet"), a.href(path)])
+    Webp | Png | Jpeg ->
+      h.img([
+        // a.class("w-full max-w-xl"),
+        a.src(path),
+        // a.style([
+      //   #("width", "500px"),
+      //   #("height", "500px"),
+      //   // #("vertical-align", "bottom"),
+      // // #("margin-bottom", "-10px"),
+      // // #("margin-top", "-10px"),
+      // ]),
+      ])
   }
   |> t.done()
 }
