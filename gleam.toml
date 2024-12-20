@@ -1,5 +1,5 @@
 name = "mysig"
-version = "0.2.1"
+version = "0.2.2"
 target = "javascript"
 
 description = "Tookit for building web (sites, apps or pages) with Gleam"
@@ -8,7 +8,7 @@ repository = { type = "github", user = "crowdhailer", repo = "mysig" }
 
 [dependencies]
 gleam_stdlib = ">= 0.34.0 and < 2.0.0"
-snag = ">= 0.3.0 and < 1.0.0"
+snag = ">= 1.1.0 and < 2.0.0"
 plinth = ">= 0.5.0 and < 1.0.0"
 gleam_javascript = ">= 0.13.0 and < 1.0.0"
 gleam_http = ">= 3.7.0 and < 4.0.0"
