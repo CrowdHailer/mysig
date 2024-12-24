@@ -1,63 +1,49 @@
-import gleam/bit_array
-import gleam/dict
-import javascript/mutable_reference as ref
-import lustre/attribute as a
-import lustre/element/html as h
-import midas/task as t
-
-pub const tailwind_2_2_11 = "https://unpkg.com/tailwindcss@2.2.11/dist/tailwind.min.css"
-
-pub type MediaType {
-  Js
-  Css
-}
+import snag.{type Snag}
 
 pub type Asset {
-  Asset(name: String, bytes: BitArray, ext: MediaType)
+  Ref(String)
 }
 
-pub fn css(name, content) {
-  Asset(name, bit_array.from_string(content), Css)
+pub fn src(asset) {
+  let Ref(path) = asset
+  path
 }
 
-pub fn js(name, content) {
-  Asset(name, bit_array.from_string(content), Js)
+pub type Effect(a) {
+  Done(a)
+  Abort(Snag)
+  Load(file: String, resume: fn(Result(Asset, Snag)) -> Effect(a))
+  Bundle(
+    module: String,
+    function: String,
+    resume: fn(Result(Asset, Snag)) -> Effect(a),
+  )
 }
 
-pub type Bundle {
-  Bundle(root: String, store: ref.MutableReference(dict.Dict(String, BitArray)))
+pub fn done(x) {
+  Done(x)
 }
 
-pub fn new_bundle(root) {
-  Bundle(root, ref.new(dict.new()))
+pub fn load(file) {
+  Load(file, result_to_effect)
 }
 
-pub fn to_files(bundle) {
-  let Bundle(_, store) = bundle
-  ref.get(store) |> dict.to_list
+pub fn bundle(module, function) {
+  Bundle(module, function, result_to_effect)
 }
 
-pub fn resource(asset, bundle) {
-  let Asset(name, bytes, type_) = asset
-  use hash <- t.do(t.hash(t.SHA256, bytes))
-  let hash = bit_array.base16_encode(hash)
-  let ext = case type_ {
-    Js -> "js"
-    Css -> "css"
+fn result_to_effect(result) {
+  case result {
+    Ok(value) -> Done(value)
+    Error(reason) -> Abort(reason)
   }
-  let id = name <> "-" <> hash <> "." <> ext
+}
 
-  let Bundle(root, store) = bundle
-  let path = root <> "/" <> id
-  ref.update(store, dict.insert(_, path, bytes))
-
-  case type_ {
-    Js ->
-      h.script(
-        [a.attribute("defer", ""), a.attribute("async", ""), a.src(path)],
-        "",
-      )
-    Css -> h.link([a.rel("stylesheet"), a.href(path)])
+pub fn do(eff, then) {
+  case eff {
+    Done(value) -> then(value)
+    Abort(reason) -> Abort(reason)
+    Bundle(m, f, resume) -> Bundle(m, f, fn(reply) { do(resume(reply), then) })
+    Load(lift, resume) -> Load(lift, fn(reply) { do(resume(reply), then) })
   }
-  |> t.done()
 }
