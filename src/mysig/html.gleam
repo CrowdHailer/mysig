@@ -15,10 +15,9 @@ pub fn common_head_tags() {
   [
     h.meta([a.attribute("charset", "UTF-8")]),
     h.meta([
-      a.attribute("http-equiv", "X-UA-Compatible"),
-      a.attribute("content", "IE=edge"),
+      a.name("viewport"),
+      a.content("width=device-width, initial-scale=1.0"),
     ]),
-    h.meta([a.attribute("viewport", "width=device-width, initial-scale=1.0")]),
   ]
 }
 

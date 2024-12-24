@@ -98,15 +98,30 @@ i.e. if rendered on the server with a specific state there would be no way to di
 
 Once bundling we can find and replace all references using a magic string "__asset__/foo.png?w=20"
 
-### Older tools
+### Older tools in this repo
 
 These are still include as they have some nice approaches but I think they are probably superceeded by the main approach above
+
+- open_graph, helpful builders
+- local, services static set of files
 
 ## Live reloading for local dev
 
 In the `mysig/local` module, works with watching midas tasks.
 
 See https://vimeo.com/1030747035
+
+### Other Gleam tools
+
+##### Pensive https://github.com/Pevensie/pevensie
+A backend framework focusing on Auth and DB integration Mysig is instead a metaframework for front end first apps.
+
+##### Arctic https://github.com/RyanBrewer317/arctic
+Focuses on pulling content from the file system and composing parsers.
+I want Mysig to focus on working with already structured data and ignoring the file system as much as possible.
+
+##### Meadow https://github.com/JoelVerm/meadow
+Not very active focuses on adding server signals to a solidjs client. I like the sound of this approach.
 
 ## Credit
 
