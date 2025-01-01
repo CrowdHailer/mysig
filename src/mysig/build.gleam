@@ -1,7 +1,6 @@
 import gleam/dict
 import gleam/javascript/promise
 import gleam/list
-import lustre/element
 import mysig/asset/server
 import mysig/route.{Route}
 
@@ -22,11 +21,18 @@ pub fn to_files(route) {
 
 fn routes_to_files(route, path, routes, assets) {
   let Route(index, items) = route
-  use #(page, assets) <- promise.try_await(server.build_manifest(index, assets))
-  let content = element.to_document_string(page)
-  let routes = [#(path <> "/index.html", <<content:utf8>>), ..routes]
-
-  do_items_to_files(items, path, routes, assets)
+  case index {
+    route.Page(index) -> {
+      use r <- promise.try_await(server.build_manifest(index, assets))
+      let #(content, assets) = r
+      let routes = [#(path <> "/index.html", <<content:utf8>>), ..routes]
+      do_items_to_files(items, path, routes, assets)
+    }
+    route.Static(bytes) -> {
+      let routes = [#(path, bytes), ..routes]
+      do_items_to_files(items, path, routes, assets)
+    }
+  }
 }
 
 fn do_items_to_files(items, path, routes, assets) {

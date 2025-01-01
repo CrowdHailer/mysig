@@ -1,3 +1,4 @@
+import filepath
 import gleam/dict
 import gleam/http/request
 import gleam/http/response
@@ -5,6 +6,7 @@ import gleam/io
 import gleam/javascript/promise
 import gleam/json
 import gleam/list
+import gleam/result
 import gleam/string
 import glen
 import glen_node
@@ -12,6 +14,7 @@ import javascript/mutable_reference
 import lustre/attribute as a
 import lustre/element
 import lustre/element/html as h
+import marceau
 import mysig/asset/server
 import mysig/route
 import snag
@@ -38,12 +41,11 @@ fn handle(request, route, store) {
     // TODO should be a get request
     _ ->
       case route.match(segments, route) {
-        Ok(endpoint) -> {
+        Ok(route.Page(endpoint)) -> {
           use result <- promise.map(server.build_manifest(endpoint, dict.new()))
           case result {
             Ok(#(page, assets)) -> {
               mutable_reference.update(store, dict.merge(assets, _))
-              let page = element.to_document_string(page)
               let page =
                 string.replace(page, "<body>", "<body>" <> manifest(assets))
               response.new(200)
@@ -64,6 +66,16 @@ fn handle(request, route, store) {
               )
             }
           }
+        }
+        Ok(route.Static(content)) -> {
+          let ext =
+            filepath.extension(request.path)
+            |> result.unwrap("application/octet-stream")
+          let mime = marceau.extension_to_mime_type(ext)
+          response.new(200)
+          |> response.prepend_header("content-type", mime)
+          |> response.set_body(glen.Bits(content))
+          |> promise.resolve()
         }
         Error(Nil) ->
           promise.resolve(response.new(404) |> response.set_body(glen.Empty))

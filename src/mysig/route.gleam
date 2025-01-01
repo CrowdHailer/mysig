@@ -1,20 +1,21 @@
 import gleam/list
+import mysig/asset
 
 pub type Endpoint {
   // page at this endpoint
-  Page(String)
+  Page(asset.Effect(String))
   // static below this point
-  App
+  Static(content: BitArray)
 }
 
-pub type Route(endpoint) {
-  Route(index: endpoint, items: List(#(String, Route(endpoint))))
+pub type Route {
+  Route(index: Endpoint, items: List(#(String, Route)))
   // Slug
   //   Segment(index: Endpoint, lookup: fn(String) -> Route)
   //   Spread(fn(List(String)) -> Route)
 }
 
-pub fn match(segments: List(String), route: Route(_)) {
+pub fn match(segments: List(String), route: Route) {
   case segments {
     [] -> Ok(route.index)
     [next, ..rest] ->
