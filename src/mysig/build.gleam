@@ -1,7 +1,9 @@
 import gleam/dict
 import gleam/javascript/promise
 import gleam/list
+import gleam/string
 import mysig/asset/server
+import mysig/dev
 import mysig/route.{Route}
 
 pub fn to_files(route) {
@@ -25,6 +27,8 @@ fn routes_to_files(route, path, routes, assets) {
     route.Page(index) -> {
       use r <- promise.try_await(server.build_manifest(index, assets))
       let #(content, assets) = r
+      let content =
+        string.replace(content, "<body>", "<body>" <> dev.manifest(assets))
       let routes = [#(path <> "/index.html", <<content:utf8>>), ..routes]
       do_items_to_files(items, path, routes, assets)
     }

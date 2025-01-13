@@ -83,7 +83,7 @@ fn handle(request, route, store) {
   }
 }
 
-fn manifest(assets) {
+pub fn manifest(assets) {
   json.object(
     list.map(dict.to_list(assets), fn(entry) {
       let #(key, #(file, _mime, _bits)) = entry
