@@ -1,6 +1,5 @@
 import gleam/dict
-import gleam/dynamic
-import gleam/io
+import gleam/dynamic/decode
 import gleam/json
 import mysig/asset
 import plinth/browser/document
@@ -10,11 +9,11 @@ pub fn load_manifest(eff) {
   // if fail do base 64 encoding of bad image
   let assert Ok(el) = document.query_selector("#mysig")
   let assert Ok(assets) =
-    json.decode(
+    json.parse(
       element.inner_text(el),
-      dynamic.dict(dynamic.string, dynamic.string),
+      decode.dict(decode.string, decode.string),
     )
-    |> io.debug
+
   do_load_manifest(eff, assets)
 }
 
