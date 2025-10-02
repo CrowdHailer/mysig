@@ -24,10 +24,25 @@ align-content is only useful when wrapping is set, in most cases align items is 
 .vstack {
 	display: flex;
 	flex-direction: column;
-  align-items: center; 
+	align-items: center;
 	overflow: hidden;
 	min-height: 100%;
 	justify-content: center;
+
+	&.clipped {
+		height: 100%;
+		overflow: hidden;
+
+		>.scroll {
+			overflow-y: auto;
+		}
+	}
+
+	>.shrink {
+		flex-shrink: 1;
+		overflow-y: auto;
+	}
+
 }
 
 body.vstack {
@@ -41,12 +56,29 @@ body.vstack {
 .hstack {
 	display: flex;
 	flex-direction: row;
-  align-items: center;
-  justify-content: center;
-}
+	align-items: center;
+	justify-content: center;
+	overflow-y: auto;
+	min-height: 100%;
 
-.hstack.equal > * {
-	flex: 1;
+	&.clipped {
+		height: 100%;
+		overflow: hidden;
+
+		>.scroll {
+			overflow-y: auto;
+		}
+	}
+
+	>.shrink {
+		flex-shrink: 1;
+		overflow-x: auto;
+	}
+
+
+	&.top {
+		align-items: flex-start;
+	}
 }
 
 body.hstack {
@@ -55,15 +87,53 @@ body.hstack {
 
 /* stack children */
 
+.flex-1 {
+	flex: 1;
+}
+
+.flex-2 {
+	flex: 2;
+}
+
 .expand {
 	flex-grow: 1;
 }
 
-.shrink {
-	flex-shrink: 1;
-	overflow: auto;
-}
-
 .cover {
 	align-self: stretch;
+}
+
+/* Also any clever layout overflow */
+
+.bg-skew {
+	position: relative;
+	z-index: 1;
+}
+
+.bg-skew::before {
+	content: '';
+	display: block;
+	height: 100%;
+	width: 100%;
+	position: absolute;
+	z-index: -1;
+	top: 0;
+	left: 0;
+	background: inherit;
+	transform: skew(0, -2deg);
+	transform-origin: top left;
+}
+
+.bg-skew::after {
+	content: '';
+	display: block;
+	height: 100%;
+	width: 100%;
+	position: absolute;
+	z-index: -1;
+	top: 0;
+	left: 0;
+	background: inherit;
+	transform: skew(0, -2deg);
+	transform-origin: bottom right;
 }
