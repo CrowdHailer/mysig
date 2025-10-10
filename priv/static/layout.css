@@ -37,6 +37,9 @@ align-content is only useful when wrapping is set, in most cases align items is 
 			overflow-y: auto;
 		}
 	}
+	&.scroll {
+		overflow-y: auto;
+	}
 
 	>.shrink {
 		flex-shrink: 1;
@@ -78,6 +81,19 @@ body.vstack {
 
 	&.top {
 		align-items: flex-start;
+	}
+
+	&.tight {
+		padding: 2px;
+		gap: 2px
+	}
+	&.comfortable {
+		padding: 4px;
+		gap: 4px
+	}
+
+	&.right {
+		justify-content: flex-end;
 	}
 }
 
@@ -136,4 +152,18 @@ body.hstack {
 	background: inherit;
 	transform: skew(0, -2deg);
 	transform-origin: bottom right;
+}
+
+.legible {
+	margin-inline: auto;
+	width: 100%;
+	max-width: 60ch;
+	padding-inline: 2ch;
+}
+
+.legible-large {
+	margin-inline: auto;
+	width: 100%;
+	max-width: 82ch;
+	padding-inline: 2ch;
 }
