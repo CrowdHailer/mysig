@@ -5,9 +5,23 @@
 }
 
 html {
-	line-height: 1.15;
+	line-height: 1.5;
 	-webkit-text-size-adjust: 100%;
 	tab-size: 4;
+}
+
+/* https://thecascade.dev/article/least-amount-of-css/ */
+body {
+	font-family: System UI;
+	font-size: 1.25rem;
+	line-height: 1.5;
+
+	min-height: 100vh;
+
+	/* I'd like layout elements to scroll by choice however fixing height causes */
+	/* If overflow is hidden by default set height (not min-height) to 100vh. */
+	/* Otherwise scroll directives will not work */
+	/* overflow: hidden; */
 }
 
 * {
@@ -22,62 +36,36 @@ align-content is only useful when wrapping is set, in most cases align items is 
 */
 
 .vstack {
+	&:only-child {
+		min-height: 100%;
+	}
+
 	display: flex;
 	flex-direction: column;
+
+	&.reverse {
+		flex-direction: column-reverse;
+	}
+
 	align-items: center;
-	overflow: hidden;
-	min-height: 100%;
 	justify-content: center;
-
-	&.clipped {
-		height: 100%;
-		overflow: hidden;
-
-		>.scroll {
-			overflow-y: auto;
-		}
-	}
-	&.scroll {
-		overflow-y: auto;
-	}
-
-	>.shrink {
-		flex-shrink: 1;
-		overflow-y: auto;
-	}
-
 }
 
-body.vstack {
-	min-height: 100vh;
-}
-
-.vstack.reverse {
-	flex-direction: column-reverse;
-}
 
 .hstack {
+	&:only-child {
+		min-height: 100%;
+	}
+
 	display: flex;
 	flex-direction: row;
+
+	&.reverse {
+		flex-direction: row-reverse;
+	}
+
 	align-items: center;
 	justify-content: center;
-	overflow-y: auto;
-	min-height: 100%;
-
-	&.clipped {
-		height: 100%;
-		overflow: hidden;
-
-		>.scroll {
-			overflow-y: auto;
-		}
-	}
-
-	>.shrink {
-		flex-shrink: 1;
-		overflow-x: auto;
-	}
-
 
 	&.top {
 		align-items: flex-start;
@@ -87,6 +75,7 @@ body.vstack {
 		padding: 2px;
 		gap: 2px
 	}
+
 	&.comfortable {
 		padding: 4px;
 		gap: 4px
@@ -97,8 +86,24 @@ body.vstack {
 	}
 }
 
-body.hstack {
-	min-height: 100vh;
+/* default scroll behaviour has to be to scroll, otherwise in certain cases background color does not cover content */
+
+.vstack.clipped, .hstack.clipped {
+	overflow: hidden;
+	max-height: 100%;
+}
+
+/* Extra specificity rules needed to counter :only-child rules on vstack hstack */
+.scroll-y {
+	overflow-y: auto;
+	/* Can this always be in scroll y */
+	/* flex-shrink: 1; */
+}
+
+.vstack.scroll-y, .hstack.scroll-y {
+	overflow-y: auto;
+	/* If you don't add fit content here then the background color stops at container height */
+	/* height: fit-content; */
 }
 
 /* stack children */
@@ -117,6 +122,27 @@ body.hstack {
 
 .cover {
 	align-self: stretch;
+}
+
+.legible {
+	margin-inline: auto;
+	width: 100%;
+	padding-inline: 2rem;
+	max-width: 28rem;
+}
+
+.legible-sm {
+	margin-inline: auto;
+	width: 100%;
+	padding-inline: 2rem;
+	max-width: 24rem;
+}
+
+.legible-lg {
+	margin-inline: auto;
+	width: 100%;
+	padding-inline: 2rem;
+	max-width: 32rem;
 }
 
 /* Also any clever layout overflow */
@@ -154,16 +180,3 @@ body.hstack {
 	transform-origin: bottom right;
 }
 
-.legible {
-	margin-inline: auto;
-	width: 100%;
-	max-width: 60ch;
-	padding-inline: 2ch;
-}
-
-.legible-large {
-	margin-inline: auto;
-	width: 100%;
-	max-width: 82ch;
-	padding-inline: 2ch;
-}
