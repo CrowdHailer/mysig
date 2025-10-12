@@ -16,8 +16,6 @@ body {
 	font-size: 1.25rem;
 	line-height: 1.5;
 
-	min-height: 100vh;
-
 	/* I'd like layout elements to scroll by choice however fixing height causes */
 	/* If overflow is hidden by default set height (not min-height) to 100vh. */
 	/* Otherwise scroll directives will not work */
@@ -26,6 +24,14 @@ body {
 
 * {
 	margin: 0;
+}
+
+/* If only min-height is set on body then the body size will be correct but child height of 100% will not grow properly */
+html, body {
+	height: 100%;
+}
+body {
+	min-height: 100vh;
 }
 
 /* stacks */
