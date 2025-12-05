@@ -7,6 +7,7 @@ import gleam/list
 import gleam/result
 import gleam/string
 import marceau
+import midas/effect as e
 import midas/task as t
 import snag
 
@@ -65,7 +66,7 @@ pub fn handler(content) {
         Ok(ext) -> marceau.extension_to_mime_type(ext)
         Error(Nil) -> "application/octet-stream"
       }
-      use hash <- t.do(t.hash(t.SHA1, bytes))
+      use hash <- t.do(t.hash(e.Sha1, bytes))
       let etag = bit_array.base64_url_encode(hash, False)
       let bytes = case mime {
         "text/html" -> inject_live_reload(etag, bytes)
@@ -76,7 +77,7 @@ pub fn handler(content) {
         |> response.set_header("content-type", mime)
         |> response.set_header("etag", etag)
         |> response.set_body(bytes)
-      t.Done(#(path, response))
+      t.done(#(path, response))
     }),
   )
   t.done(do_serve(_, content))
