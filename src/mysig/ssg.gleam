@@ -297,9 +297,10 @@ fn strip_prefix(path: String, root: String) -> String {
 }
 
 fn html_path(path: String) -> String {
-  case string.ends_with(path, ".md") {
-    True -> string.drop_end(path, 3) <> "/index.html"
-    False -> path <> "/index.html"
+  case string.ends_with(path, "/index.md"), string.ends_with(path, ".md") {
+    True, _ -> string.drop_end(path, 3) <> "html"
+    _, True -> string.drop_end(path, 3) <> "/index.html"
+    _, False -> path <> "/index.html"
   }
 }
 
