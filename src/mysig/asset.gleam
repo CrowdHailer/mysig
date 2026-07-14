@@ -1,3 +1,4 @@
+import midas/continuation.{type Continuation}
 import snag.{type Snag}
 
 pub type Asset {
@@ -20,8 +21,23 @@ pub type Effect(a) {
   )
 }
 
+pub type Task(t, a) =
+  Continuation(t, Result(a, Snag))
+
 pub fn done(x) {
   Done(x)
+}
+
+pub fn return(x) {
+  continuation.return(Ok(x))
+}
+
+pub fn then(task, next) {
+  use result <- continuation.then(task)
+  case result {
+    Ok(value) -> next(value)
+    Error(reason) -> continuation.return(Error(reason))
+  }
 }
 
 pub fn load(file) {
