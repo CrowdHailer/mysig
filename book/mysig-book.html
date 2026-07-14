@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mysig Book</title>
+  <style>
+    @page { margin: 18mm 16mm; }
+    body { color: #1c1917; font: 12pt/1.55 ui-serif, Georgia, serif; }
+    main { max-width: 760px; margin: 0 auto; }
+    h1, h2, h3 { font-family: ui-sans-serif, system-ui, sans-serif; line-height: 1.1; }
+    h1 { font-size: 28pt; margin: 0 0 16pt; }
+    h2 { font-size: 18pt; margin: 24pt 0 8pt; border-bottom: 1px solid #d6d3d1; padding-bottom: 4pt; }
+    h3 { font-size: 14pt; margin: 18pt 0 6pt; }
+    p, ul, ol, pre { margin: 0 0 10pt; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 10pt; }
+    pre { background: #f5f5f4; border: 1px solid #e7e5e4; border-radius: 6px; padding: 9pt; white-space: pre-wrap; }
+    a { color: #9f1239; }
+    .title-page { break-after: page; min-height: 85vh; display: flex; flex-direction: column; justify-content: center; }
+    .subtitle { font-size: 15pt; color: #57534e; }
+    .chapter { break-before: page; }
+    .toc li { margin-bottom: 5pt; }
+  </style>
+</head>
+<body>
+<main>
+  <section class="title-page">
+    <h1>Mysig Book</h1>
+    <p class="subtitle">Everything you need to learn to build a static site with Mysig, including the image-resizing design needed for Zola-style parity.</p>
+    <p>Mysig is a small, explicit toolkit for building static sites and Gleam web apps without compiler magic.</p>
+  </section>
+
+  <section>
+    <h1>Contents</h1>
+    <ol class="toc">
+      <li>Mental Model</li>
+      <li>Project Setup</li>
+      <li>Pages And Layouts</li>
+      <li>Content Collections</li>
+      <li>Static Files And Assets</li>
+      <li>Data At Build Time</li>
+      <li>Image Resizing</li>
+      <li>Development, Export, And Deploy</li>
+    </ol>
+  </section>
+
+  <section class="chapter">
+    <h1>Mental Model</h1>
+    <p>Mysig is a static-site generator by composition, not by configuration. Your site is a Gleam program. It reads content, renders HTML, copies static files, builds assets, and writes output.</p>
+    <h2>Core Ideas</h2>
+    <ul>
+      <li>Routes are output paths, normally ending in <code>index.html</code> for clean URLs.</li>
+      <li>Pages are Lustre element trees rendered to document strings.</li>
+      <li>Content is parsed with Pamphlet, which returns metadata and a document body.</li>
+      <li>Collections are lists of source files paired with output paths.</li>
+      <li>Assets are explicit values declared before rendering code depends on state.</li>
+      <li>Production eagerly walks the site, while development can lazily build the same artifacts.</li>
+    </ul>
+    <h2>Why Explicitness Matters</h2>
+    <p>Mysig avoids magic imports such as JavaScript's <code>import image from "./cat.jpg"</code>. Instead, a page asks for assets through Mysig APIs, and the runner turns those requests into fingerprinted files.</p>
+    <ul>
+      <li>Gleam owns the data structures.</li>
+      <li>The runner owns filesystem and bundling effects.</li>
+      <li>HTML is normal Lustre output.</li>
+      <li>A byte change creates a new content-addressed URL.</li>
+    </ul>
+    <h2>What Mysig Does Not Hide</h2>
+    <p>Mysig does not hide that static sites are files on disk. You should know where files come from, where they are written, and what external tools are needed. Image resizing is one of those external tools: Mysig should model requested transforms, but Sharp should do the JPEG, PNG, AVIF, and WebP work.</p>
+  </section>
+
+  <section class="chapter">
+    <h1>Project Setup</h1>
+    <p>Create a JavaScript-target Gleam project and add Mysig plus the libraries used by the current SSG helpers.</p>
+    <pre><code>gleam new my_site
+cd my_site
+gleam add mysig lustre simplifile filepath snag</code></pre>
+    <p>For Markdown/Djot content, Mysig currently uses Pamphlet from this workspace:</p>
+    <pre><code>pamphlet = { path = "../spotless_server/packages/pamphlet" }</code></pre>
+    <p>For Mysig asset bundling and image resizing on Node, install the Node dependencies used by the runner:</p>
+    <pre><code>npm install --save-dev @rollup/plugin-node-resolve @zip.js/zip.js chokidar rollup sharp</code></pre>
+    <p>Use these generated directories and ignore them in git:</p>
+    <pre><code>build
+public
+node_modules</code></pre>
+    <h2>Minimal Main Module</h2>
+    <pre><code>import gleam/io
+import mysig/ssg
+import simplifile
+
+pub fn main() {
+  let assert Ok(Nil) = simplifile.create_directory_all("public")
+  let assert Ok(files) = ssg.passthrough_files("static", "public")
+  let assert Ok(Nil) = ssg.write_files(files, ".")
+  io.println("Built site in public/")
+}</code></pre>
+    <p>This copies everything under <code>static/</code> into <code>public/</code>. From there, add pages and collections.</p>
+  </section>
+
+  <section class="chapter">
+    <h1>Pages And Layouts</h1>
+    <p>Mysig pages are Lustre elements rendered to strings. Keep layouts as functions so all page structure remains typed Gleam code.</p>
+    <pre><code>import lustre/attribute as a
+import lustre/element
+import lustre/element/html as h
+
+fn shell(title, children) {
+  h.html([a.attribute("lang", "en")], [
+    h.head([], [
+      h.meta([a.attribute("charset", "utf-8")]),
+      h.meta([a.name("viewport"), a.content("width=device-width, initial-scale=1")]),
+      h.title([], title),
+    ]),
+    h.body([], [h.main([], children)]),
+  ])
+}
+
+fn home() {
+  shell("Home", [
+    h.h1([], [element.text("Hello Mysig")]),
+    h.p([], [element.text("A static page rendered by Gleam.")]),
+  ])
+  |> element.to_document_string()
+}</code></pre>
+    <p>Write the result to <code>public/index.html</code> with <code>simplifile.write</code> or collect it as an <code>ssg.File</code> and pass it to <code>ssg.write_files</code>.</p>
+    <h2>Clean URLs</h2>
+    <ul>
+      <li><code>/</code> maps to <code>public/index.html</code>.</li>
+      <li><code>/about/</code> maps to <code>public/about/index.html</code>.</li>
+      <li><code>/posts/hello/</code> maps to <code>public/posts/hello/index.html</code>.</li>
+    </ul>
+    <p>Mysig's collection helpers map <code>about.md</code> to <code>about/index.html</code> and <code>section/index.md</code> to <code>section/index.html</code>.</p>
+  </section>
+
+  <section class="chapter">
+    <h1>Content Collections</h1>
+    <p>Content collections turn many source files into rendered pages. Mysig uses Pamphlet to parse front matter and Djot content.</p>
+    <pre><code>import filepath
+import gleam/list
+import lustre/element
+import lustre/element/html as h
+import mysig/ssg.{type CollectionPage}
+
+fn build_posts() {
+  use entries &lt;- result_try(ssg.content_entries("content", "public", ["md"]))
+  use files &lt;- result_try(ssg.render_collection(entries, article_layout))
+  ssg.write_files(files, ".")
+}
+
+fn article_layout(page: CollectionPage(msg)) {
+  shell(title(page.metadata), [
+    h.article([], [page.content]),
+  ])
+}
+
+fn title(metadata) {
+  case list.key_find(metadata, "title") {
+    Ok(title) -&gt; title
+    Error(Nil) -&gt; "Untitled"
+  }
+}</code></pre>
+    <h2>Front Matter</h2>
+    <p>Pamphlet returns metadata as <code>List(#(String, String))</code>. Keep metadata lookup at the boundary and convert strings into richer types in your own site code when needed.</p>
+    <ul>
+      <li><code>title</code></li>
+      <li><code>description</code></li>
+      <li><code>date</code></li>
+      <li><code>draft</code></li>
+      <li><code>tags</code></li>
+      <li><code>canonical</code></li>
+      <li><code>share_image</code></li>
+      <li><code>share_alt</code></li>
+    </ul>
+    <h2>Excluding Source Directories</h2>
+    <pre><code>let excluded = [".git", "build", "public", "node_modules", "_layouts"]
+let assert Ok(paths) = ssg.collect_files_excluding(".", ["md"], excluded)</code></pre>
+    <p>This matters when migrating existing sites with generated output, templates, or project documentation inside the same repository.</p>
+  </section>
+
+  <section class="chapter">
+    <h1>Static Files And Assets</h1>
+    <p>Static files are copied as-is. Assets are declared explicitly and can be fingerprinted by the Mysig asset runner.</p>
+    <h2>Passthrough Files</h2>
+    <pre><code>let assert Ok(files) = ssg.passthrough_files("static", "public")
+let assert Ok(Nil) = ssg.write_files(files, ".")</code></pre>
+    <p>Good passthrough files include <code>robots.txt</code>, <code>favicon.ico</code>, already-built CSS, downloads, videos, and original gallery images when no resizing is needed.</p>
+    <h2>Fingerprinted Assets</h2>
+    <p>Mysig's asset runner fingerprints bytes with SHA-256 and writes assets under <code>/assets</code>. A file such as <code>logo.png</code> becomes a content-addressed name such as <code>logo.&lt;digest&gt;.png</code>.</p>
+    <p>Use fingerprinting for CSS generated by a build step, JavaScript bundles, images referenced by components, and resized image variants.</p>
+    <h2>Client Bundles</h2>
+    <pre><code>use cart &lt;- asset.then(asset.bundle("src/cart.gleam", "main"))</code></pre>
+    <p>The server runner builds the bundle and the client runner resolves the generated URL from the manifest injected into the page.</p>
+  </section>
+
+  <section class="chapter">
+    <h1>Data At Build Time</h1>
+    <p>Static sites often need data that is not Markdown. In Mysig, a data source is just a function called by the build program.</p>
+    <h2>Local Data</h2>
+    <pre><code>pub type Product {
+  Product(slug: String, name: String, price: Int, summary: String)
+}
+
+fn catalog() {
+  [Product("linen-bag", "Linen Market Bag", 42, "A strong everyday bag.")]
+}</code></pre>
+    <h2>File Data</h2>
+    <p>For JSON, TOML, or CSV, read files at the boundary and decode into typed records before rendering. Keep parsing errors as build failures so broken content cannot deploy silently.</p>
+    <h2>Remote Data</h2>
+    <pre><code>fn fetch_catalog() {
+  // Replace the dummy data with an HTTP fetch and decoder.
+  Ok(catalog())
+}</code></pre>
+    <p>Your rendering code should receive typed data, not raw JSON. This keeps templates simple and makes build failures precise.</p>
+  </section>
+
+  <section class="chapter">
+    <h1>Image Resizing</h1>
+    <p>Image resizing needs an external image engine. Mysig should not implement JPEG, PNG, WebP, AVIF, EXIF, or color-profile handling in Gleam. The right boundary is a typed Gleam request interpreted by a Node runner using Sharp.</p>
+    <h2>Required Node Dependency</h2>
+    <pre><code>npm install --save-dev sharp</code></pre>
+    <p>Sharp provides metadata reading, resize modes, EXIF-aware rotation, JPEG, PNG, WebP, AVIF, quality controls, and progressive JPEG output.</p>
+    <h2>Required Gleam Model</h2>
+    <pre><code>pub type Format {
+  Original
+  Jpeg
+  Png
+  Webp
+  Avif
+}
+
+pub type Fit {
+  Fit
+  Cover
+  Contain
+  Inside
+}
+
+pub type Resize {
+  Resize(
+    path: String,
+    width: Option(Int),
+    height: Option(Int),
+    fit: Fit,
+    format: Format,
+    quality: Option(Int),
+  )
+}
+
+pub type Metadata {
+  Metadata(width: Int, height: Int, format: String)
+}</code></pre>
+    <p>The runner should expose <code>metadata(path)</code> and <code>resize(request)</code>. Resize returns a Mysig <code>Asset</code> whose URL points at a fingerprinted generated image.</p>
+    <h2>Output Naming</h2>
+    <pre><code>&lt;source-path&gt;?w=&lt;width&gt;&amp;h=&lt;height&gt;&amp;fit=&lt;fit&gt;&amp;format=&lt;format&gt;&amp;quality=&lt;quality&gt;
+&lt;basename&gt;.&lt;transform-label&gt;.&lt;sha256&gt;.&lt;ext&gt;</code></pre>
+    <p>Hash the generated bytes, not just the request. That preserves the existing Mysig cache rule: if the bytes change, the URL changes.</p>
+    <h2>Cache Keys</h2>
+    <ul>
+      <li>source file path</li>
+      <li>source file digest</li>
+      <li>width and height</li>
+      <li>fit mode</li>
+      <li>output format</li>
+      <li>quality</li>
+      <li>Sharp version</li>
+      <li>Mysig image pipeline version</li>
+    </ul>
+    <h2>Zola-Style Gallery Parity</h2>
+    <pre><code>{% set meta = get_image_metadata(path=asset) %}
+{% set landscape = (meta.width / meta.height) &gt; 1.2 %}
+{{ resize_image(path=asset, width=900, height=900, op='fit') }}</code></pre>
+    <p>The equivalent Mysig flow should request metadata, resize to a 900 by 900 inside-fit thumbnail, and choose <code>md:w-1/3</code> for landscape images or <code>md:w-1/4</code> otherwise.</p>
+    <pre><code>use meta &lt;- image.then(image.metadata(path))
+use thumb &lt;- image.then(image.resize(image.Resize(
+  path: path,
+  width: Some(900),
+  height: Some(900),
+  fit: image.Inside,
+  format: image.Original,
+  quality: None,
+)))
+
+let width_class = case meta.width &gt; meta.height * 12 / 10 {
+  True -&gt; "md:w-1/3"
+  False -&gt; "md:w-1/4"
+}
+
+h.img([a.src(asset.src(thumb)), a.class(width_class)])</code></pre>
+    <h2>Responsive Images</h2>
+    <p>A higher-level helper can generate <code>srcset</code> variants. Useful widths are 480 for phones, 900 for cards and gallery thumbnails, 1400 for large article images, and 2200 for high-density hero images.</p>
+    <h2>HTML Rules</h2>
+    <ul>
+      <li><code>src</code> from the chosen fallback variant</li>
+      <li><code>srcset</code> for responsive variants</li>
+      <li><code>sizes</code> matching the layout</li>
+      <li><code>width</code> and <code>height</code> from metadata to reduce layout shift</li>
+      <li><code>alt</code> from content metadata, never guessed from the filename</li>
+      <li><code>loading="lazy"</code> except for the main above-the-fold image</li>
+      <li><code>decoding="async"</code> for non-critical images</li>
+    </ul>
+    <h2>Failure Rules</h2>
+    <p>Image errors should fail the build. Do not silently copy originals when a resize fails, because that hides broken deploys and creates performance regressions.</p>
+    <h2>Implementation Checklist</h2>
+    <ul>
+      <li>Add <code>sharp</code> to <code>package.json</code> dev dependencies.</li>
+      <li>Add a Node FFI module that calls Sharp for metadata and resize.</li>
+      <li>Add a Gleam <code>mysig/image</code> module with typed requests and results.</li>
+      <li>Add a server runner that turns resize requests into fingerprinted <code>/assets</code> files.</li>
+      <li>Add a dev cache under <code>build/mysig/images</code> keyed by source digest and transform.</li>
+      <li>Add tests for output names, cache keys, and metadata-based gallery classes.</li>
+      <li>Add a migrated gallery example that proves Zola <code>resize_image(... op='fit')</code> parity.</li>
+    </ul>
+  </section>
+
+  <section class="chapter">
+    <h1>Development, Export, And Deploy</h1>
+    <p>Mysig's development and production model should produce the same artifacts. The difference is when work happens.</p>
+    <h2>Development</h2>
+    <ul>
+      <li>render the requested route</li>
+      <li>build only assets needed by that route</li>
+      <li>watch source files and restart quickly</li>
+      <li>inject a manifest so client asset lookup matches production</li>
+    </ul>
+    <h2>Static Export</h2>
+    <ul>
+      <li>render every HTML page</li>
+      <li>copy passthrough files</li>
+      <li>build client bundles</li>
+      <li>resize all requested image variants</li>
+      <li>write fingerprinted assets</li>
+      <li>fail on any missing content, asset, or image transform</li>
+    </ul>
+    <h2>Verification</h2>
+    <pre><code>gleam format --check
+gleam test
+gleam run</code></pre>
+    <p>For migrations, compare old and new output: route paths, canonical URLs, static assets, image dimensions and formats, generated HTML for critical pages, and mobile and desktop screenshots.</p>
+    <h2>Deployment</h2>
+    <p>The deploy target is the generated <code>public/</code> directory. Configure hosting to serve fingerprinted assets with long-lived immutable cache headers and HTML with short cache headers.</p>
+    <p>Useful feedback measures include time from fresh clone to first successful build, number of route differences during migration, image weight before and after resizing, Largest Contentful Paint on pages with hero images, and broken-link count after export.</p>
+  </section>
+</main>
+</body>
+</html>
