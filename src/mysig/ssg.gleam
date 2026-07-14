@@ -49,7 +49,15 @@ pub fn collect_files(
   root: String,
   extensions: List(String),
 ) -> Result(List(String), Snag) {
-  use files <- result_try(walk(root))
+  collect_files_excluding(root, extensions, [])
+}
+
+pub fn collect_files_excluding(
+  root: String,
+  extensions: List(String),
+  excluded_directories: List(String),
+) -> Result(List(String), Snag) {
+  use files <- result_try(walk(root, excluded_directories))
   files
   |> list.filter(fn(path) {
     case extensions {
@@ -231,24 +239,43 @@ fn create_directory(path: String) -> Result(Nil, Snag) {
   }
 }
 
-fn walk(root: String) -> Result(List(String), Snag) {
+fn walk(
+  root: String,
+  excluded_directories: List(String),
+) -> Result(List(String), Snag) {
   case simplifile.read_directory(root) {
-    Ok(entries) -> walk_entries(entries, root, [])
+    Ok(entries) -> walk_entries(entries, root, excluded_directories, [])
     Error(reason) -> snag.error(simplifile.describe_error(reason))
   }
 }
 
-fn walk_entries(entries: List(String), root: String, found: List(String)) {
+fn walk_entries(
+  entries: List(String),
+  root: String,
+  excluded_directories: List(String),
+  found: List(String),
+) {
   case entries {
     [] -> Ok(found)
     [entry, ..rest] -> {
       let path = filepath.join(root, entry)
       case simplifile.is_directory(path) {
         Ok(True) -> {
-          use nested <- result_try(walk(path))
-          walk_entries(rest, root, list.append(nested, found))
+          case list.contains(excluded_directories, entry) {
+            True -> walk_entries(rest, root, excluded_directories, found)
+            False -> {
+              use nested <- result_try(walk(path, excluded_directories))
+              walk_entries(
+                rest,
+                root,
+                excluded_directories,
+                list.append(nested, found),
+              )
+            }
+          }
         }
-        Ok(False) -> walk_entries(rest, root, [path, ..found])
+        Ok(False) ->
+          walk_entries(rest, root, excluded_directories, [path, ..found])
         Error(reason) -> snag.error(simplifile.describe_error(reason))
       }
     }
