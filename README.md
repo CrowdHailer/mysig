@@ -9,6 +9,8 @@ Cosy toolkit to make you feel at home.
 gleam add mysig
 ```
 
+Read the [Mysig Book](./book/README.md) for a practical guide to building static sites with Mysig, including content collections, static export, assets, and the image-resizing design.
+
 The project include several tools that I have for making it easier to build apps with Gleam (and Lustre).
 *For the moment the project assumes lustre but that constraint should relax over time.*
 
