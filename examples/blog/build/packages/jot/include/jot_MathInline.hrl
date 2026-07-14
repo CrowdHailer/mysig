@@ -1,0 +1,1 @@
+-record(math_inline, {content :: binary()}).

@@ -1,0 +1,1 @@
+-record(mark, {content :: list(jot:inline())}).

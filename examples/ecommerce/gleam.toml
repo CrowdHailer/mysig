@@ -1,0 +1,9 @@
+name = "mysig_ecommerce_example"
+version = "1.0.0"
+target = "javascript"
+
+[dependencies]
+gleam_stdlib = ">= 1.0.0 and < 2.0.0"
+lustre = ">= 5.7.0 and < 6.0.0"
+mysig = { path = "../.." }
+simplifile = ">= 2.0.0 and < 3.0.0"

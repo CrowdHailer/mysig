@@ -1,0 +1,1 @@
+-record(superscript, {content :: list(jot:inline())}).

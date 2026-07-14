@@ -1,0 +1,1 @@
+-record(subscribe, {kind :: integer(), key :: binary()}).

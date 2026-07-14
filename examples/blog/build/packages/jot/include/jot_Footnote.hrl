@@ -1,0 +1,1 @@
+-record(footnote, {reference :: binary()}).

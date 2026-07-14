@@ -1,0 +1,1 @@
+-record(raw_block, {content :: binary()}).

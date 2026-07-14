@@ -1,0 +1,1 @@
+-record(delete, {content :: list(jot:inline())}).

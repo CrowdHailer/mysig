@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1" name="viewport"><title>Mysig Shop</title><style>
+body { margin: 0; font: 17px/1.5 Inter, ui-sans-serif, system-ui, sans-serif; color: #0f172a; background: #eef2ff; }
+main { max-width: 1120px; margin: 0 auto; padding: 56px 24px; }
+h1 { font-size: clamp(2.4rem, 7vw, 5.6rem); line-height: .9; letter-spacing: -.07em; max-width: 820px; }
+a { color: #4f46e5; font-weight: 800; }
+.eyebrow { color: #be123c; text-transform: uppercase; letter-spacing: .18em; font-size: 12px; font-weight: 900; }
+.hero { margin-bottom: 32px; }
+.cart { display: inline-flex; padding: 10px 14px; background: #0f172a; color: white; border-radius: 999px; margin-bottom: 28px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 18px; }
+.card, .detail { background: white; border: 1px solid #c7d2fe; border-radius: 24px; padding: 24px; box-shadow: 0 18px 40px #6366f133; }
+button { border: 0; border-radius: 999px; padding: 14px 18px; background: #4f46e5; color: white; font-weight: 900; }
+</style></head><body><main><section class="hero"><p class="eyebrow">Dummy CMS</p><h1>A static storefront with a Gleam cart</h1><p>Catalog data is decoded into typed Gleam records at build time.</p></section><div class="cart" id="cart">Cart component mounts here.</div><div class="grid"><article class="card"><h2><a href="/products/linen-bag/">Linen Market Bag</a></h2><p>A strong everyday bag woven from natural linen.</p><strong>£42</strong></article><article class="card"><h2><a href="/products/brass-lamp/">Brass Desk Lamp</a></h2><p>Warm directional light for focused evening work.</p><strong>£120</strong></article><article class="card"><h2><a href="/products/stone-mug/">Stoneware Mug</a></h2><p>Hand-thrown mug with a satin blue glaze.</p><strong>£28</strong></article></div><script src="/cart.js" type="module"></script></main></body></html>

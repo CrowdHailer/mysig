@@ -1,0 +1,1 @@
+-record(emphasis, {content :: list(jot:inline())}).
