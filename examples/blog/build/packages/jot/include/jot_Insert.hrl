@@ -1,1 +1,0 @@
--record(insert, {content :: list(jot:inline())}).

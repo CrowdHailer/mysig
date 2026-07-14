@@ -1,8 +1,0 @@
-{application, houdini, [
-    {vsn, "1.2.1"},
-    {applications, []},
-    {description, "🪄 Fast HTML escaping"},
-    {modules, [houdini,
-               houdini@@main]},
-    {registered, []}
-]}.

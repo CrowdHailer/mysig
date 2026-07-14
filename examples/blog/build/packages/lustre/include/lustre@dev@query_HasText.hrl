@@ -1,1 +1,0 @@
--record(has_text, {content :: binary()}).

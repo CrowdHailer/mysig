@@ -1,1 +1,0 @@
--record(subscript, {content :: list(jot:inline())}).

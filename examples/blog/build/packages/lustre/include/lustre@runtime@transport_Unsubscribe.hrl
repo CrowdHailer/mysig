@@ -1,1 +1,0 @@
--record(unsubscribe, {kind :: integer(), key :: binary()}).
