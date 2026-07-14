@@ -1,14 +1,14 @@
 import filepath
 import gleam/bit_array
 import gleam/http
-import gleam/http/request
-import gleam/http/response
+import gleam/http/request.{type Request}
+import gleam/http/response.{type Response}
 import gleam/list
 import gleam/result
 import gleam/string
 import marceau
+import midas/continuation
 import midas/effect as e
-import midas/task as t
 import snag
 
 // can be as you would have on filesystem but server functions might also be wanted
@@ -56,17 +56,22 @@ fn expand_path(path) {
   |> result.replace_error(snag.new("invalid path goes outside root"))
 }
 
-pub fn handler(content) {
-  use content <- t.do(
-    t.each(content, fn(file) {
+pub fn handler(
+  content: List(#(String, BitArray)),
+  hash: e.Hash(t),
+) -> continuation.Task(t, fn(Request(a)) -> Response(BitArray), snag.Snag) {
+  use content <- continuation.then(continuation.try_each(
+    //
+    content,
+    fn(file) {
       let #(path, bytes) = file
-      use Nil <- t.try(check_absolute(path))
-      use path <- t.try(expand_path(path))
+      use Nil <- continuation.try(check_absolute(path))
+      use path <- continuation.try(expand_path(path))
       let mime = case filepath.extension(path) {
         Ok(ext) -> marceau.extension_to_mime_type(ext)
         Error(Nil) -> "application/octet-stream"
       }
-      use hash <- t.do(t.hash(e.Sha1, bytes))
+      use hash <- continuation.then(hash(e.Sha1, bytes))
       let etag = bit_array.base64_url_encode(hash, False)
       let bytes = case mime {
         "text/html" -> inject_live_reload(etag, bytes)
@@ -77,15 +82,13 @@ pub fn handler(content) {
         |> response.set_header("content-type", mime)
         |> response.set_header("etag", etag)
         |> response.set_body(bytes)
-      t.done(#(path, response))
-    }),
-  )
-  t.done(do_serve(_, content))
-}
-
-pub fn serve(port, content) {
-  use handler <- t.do(handler(content))
-  t.serve(port, handler)
+      continuation.done(#(path, response))
+    },
+  ))
+  case content {
+    Ok(content) -> continuation.done(do_serve(_, content))
+    Error(reason) -> continuation.fail(reason)
+  }
 }
 
 fn script(key) {
